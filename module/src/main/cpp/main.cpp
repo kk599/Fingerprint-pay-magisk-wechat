@@ -4,6 +4,9 @@
 #include <jni.h>
 #include <sys/types.h>
 
+#include <cstring>  
+#include <cstdlib>
+
 #include "log.h"
 
 static bool sHookEnable = false;
