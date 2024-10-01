@@ -1,0 +1,38 @@
+name: Android CI
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Get current time
+        uses: 1466587594/get-current-time@v2
+        id: current-time
+        with:
+          format: YYYYMMDD-HH
+          utcOffset: "+08:00"
+      - uses: actions/checkout@v2
+        with:
+          submodules: recursive
+      - uses: AdoptOpenJDK/install-jdk@v1
+        with:
+          version: '11'
+          architecture: x64
+      - uses: AdoptOpenJDK/install-jdk@v1
+        with:
+          version: '8'
+          architecture: x64
+          targets: 'JAVA_HOME_15'
+      - name: Grant execute permission for gradlew
+        run: chmod +x gradlew
+      - name: Build Riru modules
+        run: bash ./run.sh
+      - name: Upload Apk
+        uses: actions/upload-artifact@v4
+        with:
+          name: xposed.${{ steps.current-time.outputs.formattedTime }}
+          path: out/*
