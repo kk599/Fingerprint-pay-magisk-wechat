@@ -11,6 +11,7 @@
 
 static bool sHookEnable = false;
 static char *sAppDataDir = NULL;
+static char *cNiceName = NULL;
 
 static char *jstringToC(JNIEnv * env, jstring jstr){
     char *ret = NULL;
@@ -48,7 +49,8 @@ static bool equals(const char *str1, const char *str2) {
  *  jclassName      需要调用jar包中的类名
  *  jmethodName     需要调用的类中的静态方法
  */
-static void loadDex(JNIEnv *env, jstring jdexPath, jstring jodexPath, jstring jclassName, const char* methodName, jstring jarg1) {
+static void loadDex(JNIEnv *env, jstring jdexPath, jstring jodexPath, jstring jclassName,
+    const char* methodName, jstring jarg1, jstring jarg2) {
 
     if (!jdexPath) {
         LOGD("MEM ERR");
@@ -83,14 +85,14 @@ static void loadDex(JNIEnv *env, jstring jdexPath, jstring jodexPath, jstring jc
     }
 
     jclass javaClientClass = (jclass)env->CallObjectMethod(dexLoader, findclassMethod, jclassName);
-    jmethodID targetMethod = env->GetStaticMethodID(javaClientClass, methodName, "(Ljava/lang/String;)V");
+    jmethodID targetMethod = env->GetStaticMethodID(javaClientClass, methodName, "(Ljava/lang/String;Ljava/lang/String;)V");
 
     if (targetMethod == NULL) {
         LOGD("target method(%s) not found", methodName);
         return;
     }
 
-    env->CallStaticVoidMethod(javaClientClass, targetMethod, jarg1);
+    env->CallStaticVoidMethod(javaClientClass, targetMethod, jarg1, jarg2);
 }
 
 static void pre(JNIEnv *env, jstring *appDataDir, jstring *niceName) {
@@ -105,11 +107,11 @@ static void pre(JNIEnv *env, jstring *appDataDir, jstring *niceName) {
         LOGD("MEM ERR");
         return;
     }
-    char *cNiceName = jstringToC(env, *niceName);
+    cNiceName = jstringToC(env, *niceName);
     sHookEnable = equals(cNiceName, "com.tencent.mm");
-    if (cNiceName) {
-        free(cNiceName);
-    }
+    // if (cNiceName) {
+    //     free(cNiceName);
+    // }
 }
 
 static void post(JNIEnv *env) {
@@ -124,9 +126,10 @@ static void post(JNIEnv *env) {
         loadDex(env,
                 env->NewStringUTF(dexPath),
                 env->NewStringUTF(appCacheDir),
-                env->NewStringUTF("com.yyxx.wechatfp.xposed.plugin.XposedWeChatPlugin"),
+                env->NewStringUTF("com.surcumference.fingerprint.plugin.magisk.WeChatPlugin"),
                 "main",
-                env->NewStringUTF(sAppDataDir)
+                env->NewStringUTF(cNiceName),
+                env->NewStringUTF("riru")
         );
     }
 }
